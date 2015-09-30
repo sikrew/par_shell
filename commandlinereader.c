@@ -2,7 +2,7 @@
 // Command line reader (header file), version 2
 // Sistemas Operativos, DEI/IST/ULisboa 2015-16
 */
-
+ 
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -56,8 +56,10 @@ int readLineArguments(char **argVector, int vectorSize)
     {
       if(childPID == 0) // child process
       {
+        /* substituir este código pela chamada ao exec*/
         for(j = 0; j<10000; j++)
           for(k = 0; k<100000; k++);
+        /* fim do código para substituir */
 
         printf("\n Child Process\n");
       }
