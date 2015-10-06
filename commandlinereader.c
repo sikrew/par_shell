@@ -2,13 +2,9 @@
 // Command line reader (header file), version 2
 // Sistemas Operativos, DEI/IST/ULisboa 2015-16
 */
- 
+
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <stdlib.h>
 
 /* 
 Reads up to 'vectorSize' space-separated arguments from the standard input
@@ -28,9 +24,6 @@ Return value:
 
 int readLineArguments(char **argVector, int vectorSize)
 {
-  int childPID;
-  int status = 0;
-
   int numtokens = 0;
   char *s = " \n\t";
 
@@ -46,46 +39,19 @@ int readLineArguments(char **argVector, int vectorSize)
   if (getline(&str, &size, stdin) < 0) {
     return -1;
   }
-
    
   /* get the first token */
   token = strtok(str, s);
-  if(!strcmp(token, "exit") || !strcmp(token, "EXIT") || !strcmp(token, "Exit")) {
-    printf("process %d exiting...\n", getpid());
-    exit(EXIT_FAILURE);
+   
+  /* walk through other tokens */
+  while( numtokens < vectorSize-1 && token != NULL ) {
+    argVector[numtokens] = token;
+    numtokens ++;
+    token = strtok(NULL, s);
   }
-
-  childPID = fork();
-
-    if(childPID >= 0) // fork was successful
-    {
-      if(childPID == 0) // child process
-      {
-        
-        while( numtokens < vectorSize-1 && token != NULL ) {
-          argVector[numtokens] = token;
-          numtokens ++;
-          token = strtok(NULL, s);
-        }
-
-        argVector[numtokens+1] = NULL;
-        execv(argVector[0], argVector);       
-      }
-      else //Parent process
-      {
-        printf("parent process %d is waiting...\n", getpid());
-        wait(&status);
-        printf("\n Parent process %d waited for child to terminate with status %d\n", getpid(),status);
-      }
-    }
-    else // fork failed
-    {
-      printf("\n Fork failed\n");
-      return 1;
-    }
-
+  argVector[numtokens+1] = NULL;
+   
   for (i = numtokens; i<vectorSize; i++) {
-    //printf("%c\n", argVector[i] );
     argVector[i] = NULL;
   }
    

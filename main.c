@@ -1,52 +1,63 @@
-/*
- * main.c -- main program function
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "list.h"
+#include <sys/wait.h>
 #include "commandlinereader.h"
 
 #define MAX_ARGS 6
-#define ARRAY_LENGHT 1000
-
-
-/*
- * main program
- */
 
 int main(int argc, char *argv[])
 {
-  list_t *list;
-
-  printf("<<BEGIN>>\n");
-
-  /* initialize list */
-  list = lst_new();
-
-  //int result = 0; descomentar isto depos
-  char str[ARRAY_LENGHT];
-
-  memset(str, '\0', sizeof(char)*ARRAY_LENGHT);
+  int numtokens = 0;
+  int childPID;
+  int status = 0;
+  int i = 0;
+  int numprocesses = 0;
 
   while(1){
-    printf("par_shell > ");
-    /*TODO:
-    - ao sair, imprimir a lista com os pids e os numtokens dos filhos;
-    */
-    //result = readLineArguments(argv, MAX_ARGS);
+    numtokens = readLineArguments(argv, MAX_ARGS);
+    if(numtokens == 0 || numtokens == -1){
+      perror("Error: insufficient arguments");
+      continue;
+    }
+    else {
+      if(!strcmp(argv[0], "exit"))
+      {
+      printf("process %d exiting...\n", getpid());
+      break;
+      }
+    }
 
-    readLineArguments(argv, MAX_ARGS);
+    childPID = fork();
 
+    if(childPID >= 0) // fork was successful
+    {
+      numprocesses++;
+      if(childPID == 0) // child process
+      {
+        childPID = getpid();
+        execv(argv[0], argv);
+        perror("Error: something wrong with the process.");       
+      }
+      else numtokens = 0; //Parent process
+    }
+    else // fork failed
+    {
+      perror("Error: Fork failed\n");
+      return 1;
+    }
   }
-    /* print list */
-    //lst_print(list);
 
-    /* clean up list */
-    lst_destroy(list);
+  for(; i < numprocesses; i++)
+  {
+    childPID = wait(&status);
+    if(childPID <= 0) perror("Error");
+    if(WIFEXITED(status))
+    {
+      printf("pid: %d\tstatus: %d\n", childPID, WEXITSTATUS(status));
+    }
+  }
 
-    printf("<<END>>\n");
   return 0;
 }
