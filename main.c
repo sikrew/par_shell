@@ -4,10 +4,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include "list.h"
 #include "commandlinereader.h"
 
- #define MAX_ARGS 6
+#define MAX_ARGS 6
+#define ARRAY_LENGHT 1000
 
 
 /*
@@ -23,39 +26,27 @@ int main(int argc, char *argv[])
   /* initialize list */
   list = lst_new();
 
-  int result = 0;
+  //int result = 0; descomentar isto depos
+  char str[ARRAY_LENGHT];
 
-  result = readLineArguments(argv, MAX_ARGS);
+  memset(str, '\0', sizeof(char)*ARRAY_LENGHT);
 
-  printf("%d\n", result );
+  while(1){
+    printf("par_shell > ");
+    /*TODO:
+    - ao sair, imprimir a lista com os pids e os numtokens dos filhos;
+    */
+    //result = readLineArguments(argv, MAX_ARGS);
 
-  /* insert several elements into list 
-  insert_new_task(list, 1, "id1");
-  sleep(1);
-  insert_new_task(list, 2, "id2");
-  sleep(2);
-  insert_new_task(list, 3, "id3");
-  sleep(2);
-  insert_new_task(list, 0, "id4");
-  sleep(1);
-  insert_new_task(list, 5, "id5");*/
+    readLineArguments(argv, MAX_ARGS);
 
-  /* print list 'list' 
-  lst_print(list);*/
+  }
+    /* print list */
+    //lst_print(list);
 
-  /* remove elements from list /
-  update_terminated_task(list, 1, time(NULL));
-  sleep(1);
-  update_terminated_task(list, 2, time(NULL));
-  sleep(2);
-  update_terminated_task(list, 5, time(NULL));*/
+    /* clean up list */
+    lst_destroy(list);
 
-  /* print list /*/
-
-  /* clean up list */
-  lst_destroy(list);
-
-  printf("<<END>>\n");
-
+    printf("<<END>>\n");
   return 0;
 }

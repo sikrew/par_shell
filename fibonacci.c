@@ -12,7 +12,7 @@
 
 int main (int argc, char** argv) {
 
-  if (argc != 2) { 
+  if (argc != 3) { 
 	  printf("Incorrect arguments: fibonacci number_of_terms\n");
 	  exit(EXIT_FAILURE);
   }

@@ -27,6 +27,20 @@ typedef struct {
    lst_iitem_t * prioFive;
 } list_t;
 
+/* alterar estrutura das funcoes para aceitarem estes tipos de dados. (list.c e list.h)
+typedef struct lst_iitem {
+   int childPID;
+   int numtokens;
+   struct lst_iitem *next;
+} lst_iitem_t;
+
+* list_t *
+typedef struct {
+   lst_iitem_t * first;
+} list_t;
+
+*/
+
 
 
 /* lst_new - allocates memory for list_t and initializes it */

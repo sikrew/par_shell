@@ -36,7 +36,7 @@ int readLineArguments(char **argVector, int vectorSize)
 
   char *str = NULL;
   size_t size = 0;
-  int i, j, k;
+  int i;
 
   char *token;
 
@@ -46,9 +46,14 @@ int readLineArguments(char **argVector, int vectorSize)
   if (getline(&str, &size, stdin) < 0) {
     return -1;
   }
+
    
   /* get the first token */
   token = strtok(str, s);
+  if(!strcmp(token, "exit") || !strcmp(token, "EXIT") || !strcmp(token, "Exit")) {
+    printf("process %d exiting...\n", getpid());
+    exit(EXIT_FAILURE);
+  }
 
   childPID = fork();
 
@@ -56,17 +61,21 @@ int readLineArguments(char **argVector, int vectorSize)
     {
       if(childPID == 0) // child process
       {
-        /* substituir este código pela chamada ao exec*/
-        for(j = 0; j<10000; j++)
-          for(k = 0; k<100000; k++);
-        /* fim do código para substituir */
+        
+        while( numtokens < vectorSize-1 && token != NULL ) {
+          argVector[numtokens] = token;
+          numtokens ++;
+          token = strtok(NULL, s);
+        }
 
-        printf("\n Child Process\n");
+        argVector[numtokens+1] = NULL;
+        execv(argVector[0], argVector);       
       }
       else //Parent process
       {
+        printf("parent process %d is waiting...\n", getpid());
         wait(&status);
-        printf("\n Parent process waited for child to terminate with status %d\n", status);
+        printf("\n Parent process %d waited for child to terminate with status %d\n", getpid(),status);
       }
     }
     else // fork failed
@@ -75,16 +84,8 @@ int readLineArguments(char **argVector, int vectorSize)
       return 1;
     }
 
-  /* walk through other tokens */
-  while( numtokens < vectorSize-1 && token != NULL ) {
-    argVector[numtokens] = token;
-    numtokens ++;
-    
-    token = strtok(NULL, s);
-  }
-   
   for (i = numtokens; i<vectorSize; i++) {
-    /*printf("%c\n", argVector[i] );*/
+    //printf("%c\n", argVector[i] );
     argVector[i] = NULL;
   }
    

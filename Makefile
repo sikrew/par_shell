@@ -18,3 +18,6 @@ main.o: main.c commandlinereader.h list.h
 
 clean:
 	rm -f *.o core par_shell fibonacci && clear
+
+rebuild:
+	rm -f .o* core par_shell fibonacci && clear && make && ./par_shell
