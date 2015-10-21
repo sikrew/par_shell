@@ -4,29 +4,56 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <time.h>
+#include "list.h"
 #include "commandlinereader.h"
 
 #define MAX_ARGS 6
 
-void *monitoring(void *value){
-  long testValue = (long) value;
-  printf("new thread, here's the test value: %ld\n", testValue);
-  pthread_exit(NULL);
+
+list_t *list;
+int exit_flag = 0;
+int numprocesses = 0;
+int status = 0;
+pthread_mutex_t mutexChilds;
+
+void *monitoring(){
+  while(1){
+    if(numprocesses){
+      long child = wait(&status);
+      pthread_mutex_lock (&mutexChilds);
+      update_terminated_process(list, child, time(NULL));
+      numprocesses--;
+      if(numprocesses)//ha filhos?
+      {
+      pthread_mutex_unlock (&mutexChilds);
+      }
+      else if(exit_flag == 1)//se nao há - houve exit?
+      {
+      pthread_mutex_unlock (&mutexChilds);
+      pthread_exit(NULL);
+      }
+      else {
+        pthread_mutex_unlock (&mutexChilds);
+        sleep(1); //se nao há e nao houve exit, sleep
+      }
+    }
+  }
 }
 
 int main(int argc, char *argv[])
 {
+  pthread_t monitoringThread;
+
   int numtokens = 0;
   int childPID;
-  int status = 0;
   int i = 0;
-  int numprocesses = 0;
-  pthread_t monitoringThread;
-  int rc;
-  long test = 90;
 
-  rc = pthread_create(&monitoringThread, NULL, (void *)monitoring, (void *)test);
-  printf("RC: %d\n", rc);
+  list = lst_new();
+
+  pthread_mutex_init(&mutexChilds, NULL);
+  pthread_create(&monitoringThread, NULL, (void *)monitoring, NULL);
+
 
   while(1){
     numtokens = readLineArguments(argv, MAX_ARGS);
@@ -38,6 +65,7 @@ int main(int argc, char *argv[])
       if(!strcmp(argv[0], "exit"))
       {
       printf("process %d exiting...\n", getpid());
+      exit_flag = 1;
       break;
       }
     }
@@ -46,14 +74,21 @@ int main(int argc, char *argv[])
 
     if(childPID >= 0) // fork was successful
     {
+      pthread_mutex_lock (&mutexChilds);
       numprocesses++;
+      pthread_mutex_unlock (&mutexChilds);
       if(childPID == 0) // child process
       {
         childPID = getpid();
         execv(argv[0], argv);
         perror("Error: something wrong with the process.");       
       }
-      else numtokens = 0; //Parent process
+      else{ //parent process
+        pthread_mutex_lock (&mutexChilds);
+        insert_new_process(list, childPID, time(NULL));
+        pthread_mutex_unlock (&mutexChilds);
+        numtokens = 0; //Parent process
+      }
     }
     else // fork failed
     {
@@ -71,6 +106,8 @@ int main(int argc, char *argv[])
       printf("pid: %d\tstatus: %d\n", childPID, WEXITSTATUS(status));
     }
   }
+  lst_print(list);
+  lst_destroy(list);
 
   return 0;
 }
