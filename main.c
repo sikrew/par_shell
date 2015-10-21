@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,12 @@
 
 #define MAX_ARGS 6
 
+void *monitoring(void *value){
+  long testValue = (long) value;
+  printf("new thread, here's the test value: %ld\n", testValue);
+  pthread_exit(NULL);
+}
+
 int main(int argc, char *argv[])
 {
   int numtokens = 0;
@@ -14,6 +21,12 @@ int main(int argc, char *argv[])
   int status = 0;
   int i = 0;
   int numprocesses = 0;
+  pthread_t monitoringThread;
+  int rc;
+  long test = 90;
+
+  rc = pthread_create(&monitoringThread, NULL, (void *)monitoring, (void *)test);
+  printf("RC: %d\n", rc);
 
   while(1){
     numtokens = readLineArguments(argv, MAX_ARGS);

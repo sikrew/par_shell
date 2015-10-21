@@ -1,7 +1,7 @@
 # Makefile de exemplo
 
-par_shell: commandlinereader.o list.o main.o fibonacci.o
-	gcc -o par_shell commandlinereader.o list.o main.o
+par_shell: commandlinereader.o list.o main.o fibonacci.o list.o
+	gcc -pthread -o par_shell commandlinereader.o list.o main.o
 	gcc -o fibonacci fibonacci.o
 
 commandlinereader.o: commandlinereader.c commandlinereader.h
