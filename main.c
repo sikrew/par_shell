@@ -27,7 +27,6 @@ void *monitoring(){
       pthread_mutex_lock (&mutexChilds);
       update_terminated_process(list, child, time(NULL));
       numprocesses--;
-      printf("decremented numprocesses to %d\n", numprocesses);
       pthread_mutex_unlock (&mutexChilds);
     }
     else {
@@ -40,7 +39,6 @@ void *monitoring(){
       {
         pthread_mutex_unlock (&mutexChilds);
         sleep(1); //se nao há e nao houve exit, sleep
-        printf("%d sleeping... \n", numprocesses);
       }
     }
   }
@@ -74,14 +72,12 @@ int main(int argc, char *argv[])
       break;
       }
     }
-    printf("parent - numprocesses %d\n", numprocesses);
     childPID = fork();
 
     if(childPID >= 0) // fork was successful
     {
       pthread_mutex_lock (&mutexChilds);
       numprocesses++;
-      printf("incremented numprocesses to %d\n", numprocesses);
       pthread_mutex_unlock (&mutexChilds);
       if(childPID == 0) // child process
       {
