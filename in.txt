@@ -9,4 +9,12 @@ fibonacci 1000
 fibonacci 11230
 fibonacci 1000
 fibonacci 10450
+fibonacci 1000
+fibonacci 1095
+fibonacci 1000
+fibonacci 10
+fibonacci 1000
+fibonacci 11230
+fibonacci 1000
+fibonacci 10450
 exit
