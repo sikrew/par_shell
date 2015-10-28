@@ -1,5 +1,5 @@
 /*
- * list.c - implementation of the integer list functions 
+ * list.c - implementation of a linked list
  */
 
 
@@ -21,59 +21,65 @@ list_t* lst_new()
 
 void lst_destroy(list_t *list)
 {
-	struct lst_iitem *item, *nextitem;
+  struct lst_iitem *item, *nextitem;
 
-	item = list->first;
-	while (item != NULL){
-		nextitem = item->next;
-		free(item);
-		item = nextitem;
-	}
-	free(list);
+  item = list->first;
+  while (item != NULL){
+    nextitem = item->next;
+    free(item);
+    item = nextitem;
+  }
+  free(list);
 }
 
 
 void insert_new_process(list_t *list, int pid, time_t starttime)
 {
-	lst_iitem_t *item;
+  lst_iitem_t *item;
 
-	item = (lst_iitem_t *) malloc (sizeof(lst_iitem_t));
-	item->pid = pid;
-	item->starttime = starttime;
-	item->endtime = 0;
-	item->next = list->first;
-	list->first = item;
+  item = (lst_iitem_t *) malloc (sizeof(lst_iitem_t));
+  item->pid = pid;
+  item->starttime = starttime;
+  item->endtime = 0;
+  item->status = 0;
+  item->next = list->first;
+  list->first = item;
 }
 
 
-void update_terminated_process(list_t *list, int pid, time_t endtime)
+void update_terminated_process(list_t *list, int pid, time_t endtime, int status)
 {
   lst_iitem_t *item;
+
   item = list->first;
-  while (item != NULL)
-  {
+  while(item != NULL) {
     if(item->pid == pid)
     {
       item->endtime = endtime;
-      break;
+      item->status = status;
+      return;
     }
     item = item->next;
   }
-  printf("teminated process with pid: %d\n", item->pid);
+  printf("list.c: update_terminated_process() error: pid %d not in list.\n", pid);
 }
 
 
 void lst_print(list_t *list)
 {
-	lst_iitem_t *item;
+  lst_iitem_t *item;
 
-	printf("Process list with start and end time:\n");
-	item = list->first;
-	/*while(1){  use it only to demonstrate gdb potencial*/
-	while (item != NULL){
-		printf("%d\t%s", item->pid, ctime(&(item->starttime)));
-		printf("\t%s", ctime(&(item->endtime)));
-		item = item->next;
-	}
-	printf("-- end of list.\n");
+  printf("\nList of processes:\n");
+  item = list->first;
+  while (item != NULL){
+    if(WIFEXITED(item->status))
+      printf("pid: %d exited normally; status=%d.", item->pid, WEXITSTATUS(item->status));
+    else
+      printf("pid: %d terminated without calling exit.", item->pid);
+    printf(" Execution time: %d s\n", (int)(item->endtime - item->starttime));
+
+    item = item->next;
+  }
+  printf("End of list.\n");
 }
+

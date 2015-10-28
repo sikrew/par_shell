@@ -1,20 +1,6 @@
-fibonacci 1000
-fibonacci 100000
-fibonacci 10002
-fibonacci 1000
-fibonacci 1095
-fibonacci 1000
-fibonacci 10
-fibonacci 1000
-fibonacci 11230
-fibonacci 1000
-fibonacci 10450
-fibonacci 1000
-fibonacci 1095
-fibonacci 1000
-fibonacci 10
-fibonacci 1000
-fibonacci 11230
-fibonacci 1000
-fibonacci 10450
+fibonacci 10000
+fibonacci 10000
+fibonacci 10000
+fibonacci 10000
+fibonacci 10000
 exit

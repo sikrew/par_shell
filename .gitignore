@@ -1,7 +1,12 @@
 # Compiled Object files
 *.o
 
+# Core files
+core
+
 # Executables
 main
 fibonacci
-par_shell
+par-shell
+div0
+

@@ -1,23 +1,31 @@
-# Makefile de exemplo
+# Makefile for par-shell, version 1
+# Sistemas Operativos, DEI/IST/ULisboa 2015-16
 
-par_shell: commandlinereader.o list.o main.o fibonacci.o list.o
-	gcc -pthread -o par_shell commandlinereader.o list.o main.o
-	gcc -o fibonacci fibonacci.o
+CFLAGS=-g -Wall -pedantic
+
+all: par-shell fibonacci div0
+
+par-shell: par-shell.o commandlinereader.o list.o
+	gcc -o par-shell par-shell.o commandlinereader.o list.o  -pthread
+
+par-shell.o: par-shell.c commandlinereader.h
+	gcc $(CFLAGS) -c par-shell.c
 
 commandlinereader.o: commandlinereader.c commandlinereader.h
-	gcc -Wall -g -c commandlinereader.c
+	gcc $(CFLAGS) -c commandlinereader.c
 
 list.o: list.c list.h
-	gcc -Wall -g -c list.c
+	gcc $(CFLAGS) -c list.c
 
-fibonacci.o: fibonacci.c
-	gcc -Wall -g -c fibonacci.c
+fibonacci: fibonacci.c
+	gcc $(CFLAGS) -o fibonacci fibonacci.c
 
-main.o: main.c commandlinereader.h list.h
-	gcc -Wall -g -c main.c
+div0: div.c
+	gcc $(CFLAGS) -o div0 div.c
+
+run:
+	clear
+	./par-shell < i2.txt
 
 clean:
-	rm -f *.o core par_shell fibonacci && clear
-
-rebuild:
-	rm -f .o* core par_shell fibonacci && clear && make && ./par_shell
+	rm -f *.o par-shell fibonacci div0 core
