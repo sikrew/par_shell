@@ -43,6 +43,8 @@ char buffer2 [100];
 char buffer3 [100];
 int iterationNumber, totalIterationTime;   
 int childtotal_time ;
+
+char pidFilename[25];
  
 
 /* 
@@ -182,6 +184,8 @@ int main (int argc, char** argv) {
       break;
     }
 
+    
+
     /* process a command */
     start_time = time(NULL);
     while(num_children >= MAXPAR){
@@ -205,10 +209,20 @@ int main (int argc, char** argv) {
       mutex_unlock();
     }
     else if (pid == 0) {  /* child */
+
+     
+      sprintf(pidFilename, "par-shell-out-%d.txt", (int)getpid());
+
+      int fd = fopen(pidFilename,"a");
+
+      dup2(fd, 1);   // stdout
+      dup2(fd, 2);   // stderr neste ficheiro?             
+
       if (execv(args[0], args) == -1) {
         perror("Could not run child program. Child will exit.");
         exit(EXIT_FAILURE);
       }
+      close(fd);
     }
     mutex_unlock();
   }
