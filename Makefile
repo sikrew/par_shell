@@ -28,4 +28,4 @@ run:
 	./par-shell < i2.txt
 
 clean:
-	rm -f *.o par-shell fibonacci div0 core
+	rm -f *.o par-shell fibonacci div0 core log.txt

@@ -4,9 +4,11 @@
 # Core files
 core
 
+# Log files
+log.txt
+
 # Executables
 main
 fibonacci
 par-shell
 div0
-

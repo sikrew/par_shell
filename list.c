@@ -47,7 +47,7 @@ void insert_new_process(list_t *list, int pid, time_t starttime)
 }
 
 
-void update_terminated_process(list_t *list, int pid, time_t endtime, int status)
+lst_iitem_t* update_terminated_process(list_t *list, int pid, time_t endtime, int status)
 {
   lst_iitem_t *item;
 
@@ -57,11 +57,13 @@ void update_terminated_process(list_t *list, int pid, time_t endtime, int status
     {
       item->endtime = endtime;
       item->status = status;
-      return;
+      return item;
+     
     }
     item = item->next;
   }
   printf("list.c: update_terminated_process() error: pid %d not in list.\n", pid);
+  return NULL;
 }
 
 

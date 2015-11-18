@@ -30,10 +30,20 @@ int flag_exit = 0; /* do not exit */
 list_t *proc_data;
 
 pthread_mutex_t data_ctrl;
+pthread_cond_t concurrency = PTHREAD_COND_INITIALIZER;
+pthread_cond_t monitor_cycle = PTHREAD_COND_INITIALIZER;
 
-sem_t sem_main, sem_monitoring;
+/*sem_t sem_main, sem_monitoring;*/
 
-
+/*-------------- Tratamento de Ficheiros------------------------------*/
+FILE *file; 
+int iteration =0, totaltime=0;
+char buffer1 [100];
+char buffer2 [100];
+char buffer3 [100];
+int iterationNumber, totalIterationTime;   
+int childtotal_time ;
+ 
 
 /* 
 +-----------------------------------------------------------------------*/
@@ -63,42 +73,48 @@ void *tarefa_monitora(void *arg_ptr) {
   int status, childpid;
   time_t end_time;
 
-
+lst_iitem_t *proc = malloc (sizeof(lst_iitem_t*));
   printf(" *** Tarefa monitora activa.\n");
 
   while(1) {
-    sem_wait(&sem_monitoring);
+    /*sem_wait(&sem_monitoring);*/
     mutex_lock();
+    while(num_children == 0 && flag_exit == 0){
+      pthread_cond_wait(&monitor_cycle, &data_ctrl);
+    }
     if(num_children == 0) {
       if(flag_exit == 1) {
         mutex_unlock();
         printf(" *** Tarefa monitora terminou.\n");
         pthread_exit(NULL);
       }
-      else {
-        mutex_unlock();
-        /* printf(" *** No children running.\n"); */
-        /*sleep(1); *//* 1 second */
-        continue;
-      }
     }
     mutex_unlock();
+    pthread_cond_signal(&concurrency);
 
     /* wait for a child process */
 
     childpid = wait(&status);
-    sem_post(&sem_main);
+    mutex_unlock();
     if (childpid == -1) {
       perror("Error waiting for child");
       exit(EXIT_FAILURE);
     }
-
     end_time = time(NULL);
-
     mutex_lock();
     num_children --;
-    update_terminated_process(proc_data, childpid, end_time, status);
+    proc = update_terminated_process(proc_data, childpid, end_time, status);
+    if(proc)
+    {
+      childtotal_time = (int)(proc->endtime - proc->starttime);
+      totalIterationTime += childtotal_time;
+      fprintf(file,"iteracao %d\n", iteration);   
+      fprintf(file,"pid: %d execution time: %d s\n", proc->pid, childtotal_time); 
+      fprintf(file,"total execution time: %d s\n", totalIterationTime);
+      iteration++;
+    }
     mutex_unlock();
+    pthread_cond_signal(&concurrency);
   }
 }
 
@@ -113,8 +129,24 @@ int main (int argc, char** argv) {
   time_t start_time;
   int pid;
 
-  sem_init(&sem_main, 0, MAXPAR);
-  sem_init(&sem_monitoring, 0, 0);
+  if ((file = fopen("log.txt","r")) == NULL)
+  {
+  	file = fopen("log.txt", "a");
+  	fclose(file);
+  }
+  
+  file = fopen("log.txt","a+");
+
+  while (fgets(buffer1, sizeof(buffer1), file) != NULL)
+  {
+		fgets(buffer2, (int)sizeof(buffer2), file);
+		fgets(buffer3, (int)sizeof(buffer3), file);
+		sscanf(buffer3, "%*s %*s %*s %d %*s", &totalIterationTime);
+    iteration++;
+  }
+   
+  /*sem_init(&sem_main, 0, MAXPAR);
+  sem_init(&sem_monitoring, 0, 0);*/
 
 
   /* criar estrutura de dados de monitorização */
@@ -146,14 +178,19 @@ int main (int argc, char** argv) {
 
     if (strcmp(args[0], EXIT_COMMAND) == 0) {
       printf("Ending...\n");
-      sem_post(&sem_monitoring);
+      /*sem_post(&sem_monitoring);*/
       break;
     }
 
     /* process a command */
     start_time = time(NULL);
-    sem_wait(&sem_main);
+    while(num_children >= MAXPAR){
+      pthread_cond_wait(&concurrency, &data_ctrl);  
+    }
+    
+    /*sem_wait(&sem_main);*/
     pid = fork();
+    pthread_cond_signal(&monitor_cycle);
     if (pid == -1) {
       perror("Failed to create new process.");
       exit(EXIT_FAILURE);
@@ -163,7 +200,8 @@ int main (int argc, char** argv) {
       mutex_lock();
       num_children ++;
       insert_new_process(proc_data, pid, start_time);
-      sem_post(&sem_monitoring);
+      pthread_cond_signal(&monitor_cycle);
+      /*sem_post(&sem_monitoring);*/
       mutex_unlock();
     }
     else if (pid == 0) {  /* child */
@@ -172,6 +210,7 @@ int main (int argc, char** argv) {
         exit(EXIT_FAILURE);
       }
     }
+    mutex_unlock();
   }
 
   /* received command exit */
@@ -179,8 +218,9 @@ int main (int argc, char** argv) {
   /* request the monitoring thread to end */
   mutex_lock();
   flag_exit = 1;
+  pthread_cond_signal(&monitor_cycle);
   mutex_unlock();
-
+  
   /* wait for thread to end */
   if(pthread_join(tid, NULL) != 0) {
     fprintf(stderr, "Error joining thread.\n");
@@ -193,6 +233,10 @@ int main (int argc, char** argv) {
   /* clean up and exit */
   pthread_mutex_destroy(&data_ctrl);
   lst_destroy(proc_data);
+  pthread_cond_destroy(&monitor_cycle);
+  pthread_cond_destroy(&concurrency);
+
+  fclose(file);
   return 0; /* ok */
 }
 
