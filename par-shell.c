@@ -7,8 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <pthread.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
 #include <semaphore.h>
@@ -22,6 +24,15 @@
 #define MAXARGS 7
 #define MAXPAR 4
 #define BUFFER_SIZE 100
+
+#define STDIN 1
+#define STDOUT 2
+
+#define RDWR_PERMISSIONS 0644
+
+#define PIPE_BUF_SZ 100
+
+#define MYFIFO "/afs/ist.utl.pt/users/3/4/ist158534/Documents/par_shell_pipes/par-shell-in"
 
 
 int num_children = 0;
@@ -37,7 +48,7 @@ pthread_cond_t monitor_cycle = PTHREAD_COND_INITIALIZER;
 
 /*-------------- Tratamento de Ficheiros------------------------------*/
 FILE *file; 
-int iteration =0, totaltime=0;
+int iteration = 0, totaltime = 0;
 char buffer1 [100];
 char buffer2 [100];
 char buffer3 [100];
@@ -130,6 +141,14 @@ int main (int argc, char** argv) {
   char *args[MAXARGS];
   time_t start_time;
   int pid;
+  int childFd;
+  int pfd[2];  /* Pipe file descriptors */
+  int bytesRead = 0;
+  int fd;
+
+  char * myfifo = MYFIFO;
+
+  mkfifo("/tmp/par-shell-indf", 0666);
 
   if ((file = fopen("log.txt","r")) == NULL)
   {
@@ -168,7 +187,14 @@ int main (int argc, char** argv) {
 
 
   while(1) {
-    printf("Insert your command: ");
+    
+    fd = open("/tmp/par-shell-in", O_RDONLY);
+    read(fd, buffer, BUFFER_SIZE);
+    printf("Received: %s", buffer);
+    close(fd);
+    
+
+    //printf("Insert your command: ");
     numargs = readLineArguments(args, MAXARGS, buffer, BUFFER_SIZE);
 
     if (numargs < 0) {
@@ -213,16 +239,17 @@ int main (int argc, char** argv) {
      
       sprintf(pidFilename, "par-shell-out-%d.txt", (int)getpid());
 
-      int fd = fopen(pidFilename,"a");
+      childFd = open(pidFilename, O_CREAT|O_APPEND|O_RDWR,  RDWR_PERMISSIONS);
 
-      dup2(fd, 1);   // stdout
-      dup2(fd, 2);   // stderr neste ficheiro?             
+      close(STDIN);
+
+      dup(childFd);   // stdout
 
       if (execv(args[0], args) == -1) {
         perror("Could not run child program. Child will exit.");
         exit(EXIT_FAILURE);
       }
-      close(fd);
+      close(childFd);
     }
     mutex_unlock();
   }
