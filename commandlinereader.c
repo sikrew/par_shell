@@ -35,9 +35,14 @@ int readLineArguments(char **argVector, int vectorSize, char *buffer, int buffer
   if (argVector == NULL || vectorSize == 0 || buffersize == 0)
     return 0;
 
+  /*
+  START OF HACK
+  
   if (fgets(buffer, buffersize, stdin) == NULL) {
     return -1;
   }
+  
+  END OF HACK */  
    
   /* get the first token */
   token = strtok(buffer, s);
