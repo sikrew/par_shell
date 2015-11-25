@@ -24,8 +24,13 @@ div0: div.c
 	gcc $(CFLAGS) -o div0 div.c
 
 run:
+	rm -f *.o par-shell fibonacci div0 core *.txt
+	make
 	clear
-	./par-shell < i2.txt
+	./par-shell
 
 clean:
-	rm -f *.o par-shell fibonacci div0 core log.txt
+	rm -f *.o par-shell fibonacci div0 core *.txt
+
+terminal:
+	gcc -o par-shell-terminal terminal.c
